@@ -6,21 +6,18 @@ from fastapi.middleware.cors import CORSMiddleware
 app = FastAPI()
 
 # List of allowed origins
-origins = [
-    "http://localhost.tiangolo.com",
-    "https://localhost.tiangolo.com",
-    "http://localhost",
-    "http://localhost:8080",
-    "http://localhost:5173",
-]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins="*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.get("/")
+def read_root():
+    return {"ping": "pong"}
 
 @app.get("/get_scId/{keyword}")
 def get_scId_from_api(keyword: str):
