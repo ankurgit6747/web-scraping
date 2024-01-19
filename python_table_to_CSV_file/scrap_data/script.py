@@ -36,6 +36,4 @@ def store_financial_to_db(scid):
     # Store the document into MongoDB
     collection.insert_one(document)
 
-# Call the function with scid
-# store_financial_to_db('IT')
 

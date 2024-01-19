@@ -18,15 +18,20 @@ function App() {
     });
 
   const [stockInfo, setStockInfo]= useState<StockInfoInterface>();
+  const [loading, setLoading] = useState(false);
+
 
   return (
     <>
-        <SearchStock setStockInfo={setStockInfo} setHtmlContent={setHtmlContent} />
+        <SearchStock setStockInfo={setStockInfo} setHtmlContent={setHtmlContent} setLoading={setLoading} />
+        {loading ? <p>Loading...</p> : (<>
         <h3>{stockInfo ? stockInfo.fullName : ""}</h3>
-        <HtmlContent htmlContent={htmlContent.cashflow_VI} tableName='Cashflow statement' />
-        <HtmlContent htmlContent={htmlContent.balance} tableName='Balance Sheet' />
-        <HtmlContent htmlContent={htmlContent.profit} tableName='Profit and Loss' />
-        <HtmlContent htmlContent={htmlContent.keyfinratio} tableName='Financial Ratios' />
+          <HtmlContent htmlContent={htmlContent.cashflow_VI} tableName='Cashflow statement' />
+          <HtmlContent htmlContent={htmlContent.balance} tableName='Balance Sheet' />
+          <HtmlContent htmlContent={htmlContent.profit} tableName='Profit and Loss' />
+          <HtmlContent htmlContent={htmlContent.keyfinratio} tableName='Financial Ratios' />
+        </>)}
+        
     </>
   )
 }

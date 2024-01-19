@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import axios from 'axios';
 
-const SearchStock = ({setStockInfo, setHtmlContent}: any) => {
+const SearchStock = ({setStockInfo, setHtmlContent, setLoading}: any) => {
     const [keyword, setKeyword] = useState("");
 
     function handleSearch() {
+      setLoading(true);
       axios.get(`http://localhost:8000/get_scId/${keyword}`)
         .then((res) => {
           setStockInfo(res.data)
@@ -18,9 +19,9 @@ const SearchStock = ({setStockInfo, setHtmlContent}: any) => {
             "profit": res.data.profit,
             "keyfinratio": res.data.keyfinratio
           })
+          setLoading(false);
         })
     }
-    
 
     function handleKeyPress(event: React.KeyboardEvent) {
       if (event.key === 'Enter') {

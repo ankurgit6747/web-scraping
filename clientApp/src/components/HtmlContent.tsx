@@ -7,7 +7,7 @@ interface Props {
 
 const HtmlContent: React.FC<Props> = ({ htmlContent, tableName }) => (
   <>
-    <h4 style={{textAlign: 'left'}}>{tableName}</h4>
+    {htmlContent !== "" ? <h4 style={{textAlign: 'left'}}>{tableName}</h4> : null}
     <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
   </>
 );
