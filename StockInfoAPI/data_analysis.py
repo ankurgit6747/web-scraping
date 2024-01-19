@@ -5,10 +5,8 @@ df = pd.read_csv('Bulk-Deals-15-01-2023-to-15-01-2024.csv')
 # Remove leading and trailing spaces in column names
 df.columns = df.columns.str.strip()
 
-# Convert the 'Date' column to datetime format
 df['Date'] = pd.to_datetime(df['Date'])
 
-# Convert 'Quantity Traded' to int after removing commas
 df['Quantity Traded'] = df['Quantity Traded'].str.replace(',', '').astype(int)
 
 # Calculate net quantity for each group (Buy quantity - Sell quantity)
