@@ -1,14 +1,15 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 import requests
 from bs4 import BeautifulSoup # parsing HTML nad XML documents
 from fastapi.middleware.cors import CORSMiddleware
 from database import client, JSONEncoder
 from utils import convert_object_id
 import pandas as pd
+from pymongo import WriteConcern
+import pymongo
 
 app = FastAPI()
 
-# List of allowed origins
 app.add_middleware(
     CORSMiddleware,
     allow_origins="*",
@@ -34,33 +35,50 @@ def get_scId_from_api(keyword: str):
     else:
         return {"error": "No data found for this keyword"}
 
+
 @app.get("/get_financials/{sc_id}")
 async def get_financials(sc_id: str):
-    db = client['FinancialData']
-    collection = db['CompanyFinancials']
+    try:
+        db = client['FinancialData']
+        collection = db['CompanyFinancials']
 
-    result = collection.find_one({"sc_id": sc_id})
+        result = collection.find_one({"sc_id": sc_id})
 
-    if result:
-        return convert_object_id(result)
+        if result:
+            return convert_object_id(result)
 
-    else:
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
-        }
-        types = ["cashflow_VI","balance","profit","keyfinratio"]
-        document = {"sc_id": sc_id}
+        else:
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
+            }
+            types = ["cashflow_VI", "balance", "profit", "keyfinratio"]
+            document = {"sc_id": sc_id}
 
-        for type in types:
-            response = requests.get(f"https://www.moneycontrol.com/stocks/company_info/print_financials.php?sc_did={sc_id}&type={type}", headers=headers)
-            soup = BeautifulSoup(response.content, 'html.parser')
-            tables = soup.find_all('table')
-            if len(tables) >= 4:
-                fourth_table = tables[3]
-                # Add the HTML table string to the document
-                document[type] = str(fourth_table)
-            else:
-                return {"error": f"Less than 4 tables found in the HTML content for type {type}"}
+            try:
+                for type in types:
+                    response = requests.get(f"https://www.moneycontrol.com/stocks/company_info/print_financials.php?sc_did={sc_id}&type={type}", headers=headers)
+                    soup = BeautifulSoup(response.content, 'html.parser')
+                    tables = soup.find_all('table')
 
-        collection.insert_one(document)
-        return document
+                    if len(tables) >= 4:
+                        fourth_table = tables[3]
+                        document[type] = str(fourth_table)
+                    else:
+                        return {"error": "Insufficient financial data available for this sc_id"}
+
+                collection.with_options(write_concern=WriteConcern(w="majority")).insert_one(document)
+                # Convert ObjectIds to strings before returning the response
+                return {**document, "_id": str(document["_id"])}  
+
+            except requests.exceptions.RequestException as e:
+                raise HTTPException(status_code=504, detail="API request failed") from e
+
+            except pymongo.errors.PyMongoError as e:
+                raise HTTPException(status_code=500, detail="Database error") from e
+
+            except Exception as e:
+                raise HTTPException(status_code=500, detail="Unexpected error") from e
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        raise HTTPException(status_code=500, detail="An error occurred while processing the request.")
