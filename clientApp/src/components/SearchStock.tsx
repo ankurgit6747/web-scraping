@@ -10,7 +10,15 @@ const SearchStock = ({setStockInfo, setHtmlContent}: any) => {
           setStockInfo(res.data)
           return axios.get(`http://localhost:8000/get_financials/${res.data.scId}`);
         } )
-        .then((res) => setHtmlContent(res.data.content))
+        .then((res) => {
+          // setHtmlContent(res.data.content)
+          setHtmlContent({
+            "cashflow_VI": res.data.cashflow_VI,
+            "balance": res.data.balance,
+            "profit": res.data.profit,
+            "keyfinratio": res.data.keyfinratio
+          })
+        })
     }
 
   return (
