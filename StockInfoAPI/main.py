@@ -7,6 +7,7 @@ from utils import convert_object_id
 import pandas as pd
 from pymongo import WriteConcern
 import pymongo
+from googlesearch import get_organic_data
 
 app = FastAPI()
 
@@ -79,6 +80,22 @@ async def get_financials(sc_id: str):
             except Exception as e:
                 raise HTTPException(status_code=500, detail="Unexpected error") from e
 
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        raise HTTPException(status_code=500, detail="An error occurred while processing the request.")
+    
+
+@app.get("/get_report_urls")
+async def get_report_urls(company_name: str):
+    try:
+        report_urls = await get_organic_data(company_name)
+        
+        # Check if any report URLs were found
+        if report_urls:
+            return {"report_urls": report_urls}
+        else:
+            return {"error": "No report URLs found for this company name"}
+    
     except Exception as e:
         print(f"An error occurred: {e}")
         raise HTTPException(status_code=500, detail="An error occurred while processing the request.")
